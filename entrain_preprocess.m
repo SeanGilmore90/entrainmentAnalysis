@@ -33,15 +33,6 @@ else
     waitfor(msgbox('Press OK to select the location of the EntrainmentAnalysis folder'));
     parentDir = uigetdir;
 end
-
-%Determine the length of the epoch based on the length of your trials
-trialLength = inputdlg('What was the duration of the trails in seconds?',...
-    'Length of trial',...
-    [1 20]);
-trialLength = cell2mat(trialLength);
-trialLength = str2num(trialLength);
-%size of the epoch is 1 sec. after start of trail, and 3 seconds before
-%end of trail.
     
 %Add the directory of a file called 'Standard-10-5-Cap385_witheog.elp. This file is used to
 %determien the location of the channels.
@@ -61,6 +52,15 @@ filedir = fullfile(parentDir,'data/raw');
 files = dir(fullfile(parentDir,'data/raw'));
 files = {files.name};
 files = files(~ismember(files,{'.','..','Reject','.DS_Store','._.DS_Store'}));
+
+%Determine the length of the trials which will be used for epoching later on
+trialLength = inputdlg('What is the duration of the trials in seconds?',...
+    'Length of trial',...
+    [1 20]);
+trialLength = cell2mat(trialLength);
+trialLength = str2num(trialLength);
+%size of the epoch is 1 sec. after start of trail, and 3 seconds before
+%end of trail.
 
 %% loop through files and run preprocess pipeline
 for id = 1:length(files)
@@ -82,7 +82,7 @@ for id = 1:length(files)
     EEG = pop_chanedit(EEG, 'lookup',chanlocdir); % add channel locations
     
     %Display the events/triggers from the recording. Here you can inspect
-    %and determine if there is any spurious event, which can sometimes
+    %and determine if there is any spurious events, which can sometimes
     %happend from the recording
     eventTable = struct2table(EEG.event);
     correctEvent = inputdlg(num2str(unique(eventTable.type)),...
@@ -101,6 +101,7 @@ for id = 1:length(files)
         EEG = pop_editeventvals(EEG,'delete',events2delete);  
     else
     end   
+    
     %% Preprocessing
     %Use the average across all electrodes as the reference from which
     %actiivty will be compared to. For further details see: 
@@ -130,7 +131,7 @@ for id = 1:length(files)
     EEG = interpol(EEG,EEG_org.chanlocs,'spherical');
     
     %% Epoching
-    %set the epoch to 1 s after the start of the trial and 3 seconds before
+    %set the epoch to 1sec. after the start of the trial and 3sec. before
     %the end. 
     timelim = [1 trialLength-3]; 
     
